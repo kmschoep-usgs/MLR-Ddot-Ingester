@@ -11,9 +11,9 @@ HOSTNAME="${1:-DNS:localhost}"
 rm -f $DIR/wildcard* || true
 
 openssl genrsa -out $DIR/wildcard.key 2048
-openssl req -nodes -newkey rsa:2048 -keyout $DIR/wildcard-ssl.key -out $DIR/wildcard-ssl.csr -extensions SAN -reqexts SAN \
+openssl req -nodes -newkey rsa:2048 -keyout $DIR/wildcard.key -out $DIR/wildcard.csr -extensions SAN -reqexts SAN \
     -config <(cat /etc/ssl/openssl.cnf <(printf "\n[SAN]\nkeyUsage = nonRepudiation, digitalSignature, keyEncipherment\nbasicConstraints = CA:FALSE\nsubjectAltName=${HOSTNAME}")) \
     -subj "/C=US/ST=Wisconsin/L=Middleon/O=US Geological Survey/OU=WMA/CN=*"
 openssl x509 -req \
   -extfile <(printf "keyUsage = nonRepudiation, digitalSignature, keyEncipherment\nbasicConstraints = CA:FALSE\nsubjectAltName=${HOSTNAME}") \
-  -days 9999 -in $DIR/wildcard-ssl.csr -signkey $DIR/wildcard-ssl.key  -out $DIR/wildcard-ssl.crt
+  -days 9999 -in $DIR/wildcard.csr -signkey $DIR/wildcard.key  -out $DIR/wildcard.crt

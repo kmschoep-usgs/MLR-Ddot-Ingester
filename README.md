@@ -1,39 +1,46 @@
 # MLR-Ddot-Ingester
+
 [![Build Status](https://travis-ci.org/USGS-CIDA/MLR-Ddot-Ingester.svg?branch=master)](https://travis-ci.org/USGS-CIDA/MLR-Ddot-Ingester)
 [![Coverage Status](https://coveralls.io/repos/github/USGS-CIDA/MLR-Ddot-Ingester/badge.svg)](https://coveralls.io/github/USGS-CIDA/MLR-Ddot-Ingester)
 
 ## Service Description
+
 This service is part of the MLR microservices and deals with parsing uploaded DDot files. This service is contacted by the MLR Gateway service and the request is sent via HTTP with the raw uploaded file that the Gateway received from the UI. This service is the first step in any DDot-related MLR workflow and is only contacted once per submitted DDot file.
 
 This service has only a single exposesd business logic API method which is a POST at `/ddots` that expects the raw uploaded DDot file and returns the a JSON document representing the parsed DDot file. The format of the JSON document can be examined in the Swagger API documentation.
 
 ## Building and Running
+
 This project has been built and tested with python 3.6.x. To build the project locally you will need
 python 3 and virtualenv installed.
+
 ```bash
 % virtualenv --python=python3 env
 % env/bin/pip install -r requirements.txt
 ```
+
 To run the tests:
+
 ```bash
 env/bin/python -m unittest
 ```
 
 To run the application locally execute the following:
+
 ```bash
 % env/bin/python app.py
 ```
 
-The swagger documentation can then be accessed at http://127.0.0.1:5000/api (when running locally using the above command).
+The swagger documentation can then be accessed at <http://127.0.0.1:5000/api> (when running locally using the above command).
 
-Default configuration variables can be overridden be creating a .env file. For instance to turn debug on, 
+Default configuration variables can be overridden be creating a .env file. For instance to turn debug on,
 you will want to create an .env with the following:
+
 ```python
 DEBUG = True
 ```
 
-For local development, you will need to provide a JWT token to the service. This can be done through the Swagger documents by
-clicking the Authorize button and entering 'Bearer your.jwt.token'. 
+For local development, you will need to provide a JWT token to the service. This can be done through the Swagger documents by clicking the Authorize button and entering 'Bearer your.jwt.token'.
 
 A valid token can be retrieved from a running gateway session by going to `https://localhost:6026/util/token`.
 
@@ -42,21 +49,39 @@ key used to generate the token, as well as the JWT_DECODE_AUDIENCE (if any) and 
 RS256). If you don't want to verify the cert on this service, set AUTH_CERT_PATH to False.
 
 Alternatively, you can generate your own token by using the python package jwt. In the python interpreter, do the following
+
 ```python
 import jwt
 jwt.encode({'authorities': ['one_role', 'two_role']}, 'secret', algorithm='HS256')
 ```
-The output of this command will be the token that you can use. You will need to set JWT_SECRET_KEY to 'secret' in your local .env file. 
-See http://flask-jwt-simple.readthedocs.io/en/latest/options.html for the other options that you can use.
 
-## Running with Docker 
+The output of this command will be the token that you can use. You will need to set JWT_SECRET_KEY to 'secret' in your local .env file.
+See <http://flask-jwt-simple.readthedocs.io/en/latest/options.html> for the other options that you can use.
+
+## Running with Docker
+
 This application can also be run locally using the docker container built during the build process, though this does not allow the application to be run in debug mode. The included `docker-compose` file has 2 profiles to choose from when running the application locally:
 
 1. mlr-ddot-ingester: This is the default profile which runs the application as it would be in our cloud environment. This is not recommended for local development as it makes configuring connections to other services running locally on your machine more difficult.
+
 2. mlr-ddot-ingester-local-dev: This is the profile which runs the application as it would be in the mlr-local-dev project, and is configured to make it easy to replace the mlr-ddot-ingester instance in the local-dev project with this instance. It is run the same as the `mlr-ddot-ingester` profile, except it uses the docker host network driver.
 
-Before any of these options are able to be run you must also generate certificates for this application to serve using the `create_certificates` script in the `docker/certificates` directory. Additionally, this service must be able to connect to a running instance of Water Auth when starting, and it is recommended that you use the Water Auth instance from the `mlr-local-dev` project to accomplish this. In order for this application to communicate with any downstream services that it must call, including Water Auth, you must also place the certificates that are being served by those services into the `docker/certificates/import_certs` directory to be imported into the Python CA Certificates of the running container.
+### Setting up SSL
+
+This application is configured to run over HTTPS and thus requires SSL certificates to be setup before it can be run via Docker. When running this container alone and not with an MLR Local Dev setup SSL certificates can be configured easily by simply running the included `create_keys.sh` script in the `docker/certificates` directory.
+
+When intending to run this application alongside other MLR service running from the MLR Local Dev project you should use the certificate files generated by the MLR Local Dev project. This is important because in order for the MLR Local Dev services to connect to this service they must trust the certificate it is serving, which is most easily accomplished locally by using the same certificate for SSL among all of the MLR services.
+
+In addition to its own SSL certs, this service must also be able to connect to a running Water Auth server locally, and thus must trust the SSL certificate being served by Water Auth. This can be accomplished by copy-pasting the .crt file that Water Auth is serving into the `docker/certificates/import_certs` folder of this project. Any .crt file put into the `import_certs` directory will be loaded into the certificate store used by Python within the container and trusted by the application.
+
+When using MLR Local Dev this means copying the certificates that MLR Local Dev generates into 2 places in this project:
+
+1. `docker/certificates` to be used as the SSL certs served by this service
+
+2. `docker/certificates/import_certs` to have this service trust other services serving the MLR Local Dev SSL certs
+
+### Building Changes
 
 To build and run the application after completing the above steps you can run: `docker-compose up --build {profile}`, replacing `{profile}` with one of the options listed above.
 
-The swagger documentation can then be accessed at http://127.0.0.1:6028/api
+The swagger documentation can then be accessed at <http://127.0.0.1:6028/api>

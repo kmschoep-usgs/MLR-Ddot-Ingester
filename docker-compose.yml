@@ -1,12 +1,20 @@
 ---
   version: '3.7'
 
+  x-config:
+    &secrets-config
+    secrets:
+      - source: ssl_crt
+        target: /home/python/ssl.crt
+      - source: ssl_key
+        target: /home/python/ssl.key
+
   secrets:
-    tomcat_ssl_crt:
+    ssl_crt:
       file: ./docker/certificates/wildcard.crt
-    tomcat_ssl_key:
+    ssl_key:
       file: ./docker/certificates/wildcard.key
-      
+
   services:
     mlr-ddot-ingester:
       build: .
@@ -15,21 +23,20 @@
         - "6028:6028"
       volumes: 
         - ./docker/certificates/import_certs:/home/python/certificates:ro
+      << : *secrets-config
       env_file:
         - ./docker/config.env
         - ./docker/secrets.env
     
     mlr-ddot-ingester-local-dev:
-      secrets:
-      - source: tomcat_ssl_crt
-        target: /home/python/certificates/ssl.crt
-      - source: tomcat_ssl_key
-        target: /home/python/certificates/ssl.key
       build: .
       image: mlr-ddot-ingester
       network_mode: "host"
       ports:
         - "6028:6028"
+      volumes: 
+        - ./docker/certificates/import_certs:/home/python/certificates:ro
+      << : *secrets-config
       env_file:
         - ./docker/config.env
         - ./docker/secrets.env

@@ -40,7 +40,7 @@
           - sudo mv clair-scanner /usr/local/bin
           - git clone https://github.com/docker/docker-bench-security.git
         install:
-          - chmod +x docker/certificates/create_certificates.sh && docker/certificates/create_certificates.sh
+          - chmod +x docker/certificates/create_keys.sh && docker/certificates/create_keys.sh
           - docker-compose build
         script:
           - cd docker-bench-security
