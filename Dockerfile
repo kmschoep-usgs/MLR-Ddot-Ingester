@@ -23,7 +23,7 @@ COPY --chown=1000:1000 tests /build/tests
 
 RUN env/bin/python -m unittest && env/bin/python setup.py bdist_wheel
 
-FROM artifactory.wma.chs.usgs.gov/wma-docker/mlr/mlr-python-base:latest
+FROM artifactory.wma.chs.usgs.gov/wma-docker/mlr/mlr-python-base-docker:latest
 LABEL maintainer="gs-w_eto_eb_federal_employees@usgs.gov"
 
 ENV listening_port=6028
